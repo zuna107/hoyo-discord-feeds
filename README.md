@@ -1,0 +1,1 @@
+# hoyo-discord-feeds
