@@ -243,3 +243,10 @@ Important constraints:
 
 - HoYoLAB feed reference/adaptation: [GamerYuan/hoyolab-discord-worker](https://github.com/GamerYuan/hoyolab-discord-worker)
 - Upstream project credited by that repo: [UnluckyNinja/worker-bilibili-discord](https://github.com/UnluckyNinja/worker-bilibili-discord)
+  
+---
+<img width="1891" height="890" alt="Image" src="https://github.com/user-attachments/assets/3cf194bb-a69c-413d-9e97-a50790eb6dc3" />
+
+<img width="1889" height="971" alt="Image" src="https://github.com/user-attachments/assets/4c2af41a-9830-44a6-bd86-3f05f00d05b8" />
+
+<img width="1894" height="708" alt="Image" src="https://github.com/user-attachments/assets/87aa1a4e-349a-4938-a295-b7d632d4d1a1" />
