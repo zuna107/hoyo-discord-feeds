@@ -230,7 +230,7 @@ Important constraints:
 ## Operational Notes
 
 - Timestamps are stored in UTC.
-- Dashboard displays timestamps in `Asia/Jakarta (UTC+7)`.
+- Dashboard displays timestamps in `Asia/SEA (UTC+7)`.
 - Cooldown and retry behavior is applied automatically when upstream returns temporary/rate-limit errors.
 
 ## Limitations
