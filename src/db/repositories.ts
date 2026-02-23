@@ -315,6 +315,12 @@ export const subscriptionRepo = {
 }
 
 export const eventRepo = {
+  countByFeed(feedId: number): number {
+    const row = db.prepare("SELECT COUNT(*) AS c FROM events WHERE feed_id = ?").get(feedId) as
+      | Record<string, unknown>
+      | undefined
+    return Number(row?.c ?? 0)
+  },
   insertIfNew(input: {
     feedId: number
     source: Platform
