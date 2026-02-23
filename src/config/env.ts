@@ -8,6 +8,10 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(8080),
   ROLE: z.enum(["all", "api", "worker"]).default("all"),
+  LOG_TO_CONSOLE: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((value) => value === "true"),
   DB_PATH: z.string().min(1).default("./data/feed-engine.db"),
   CORS_ORIGIN: z.string().default("*"),
   DASHBOARD_AUTH_ENABLED: z

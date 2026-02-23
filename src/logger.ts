@@ -1,3 +1,4 @@
+import { env } from "./config/env.js"
 import { nowIso } from "./utils/time.js"
 
 type Level = "debug" | "info" | "warn" | "error"
@@ -11,8 +12,10 @@ const write = (level: Level, message: string, meta?: LogMeta): void => {
     message,
     ...(meta ? { meta } : {}),
   }
-  // eslint-disable-next-line no-console
-  console.log(JSON.stringify(payload))
+  if (env.LOG_TO_CONSOLE) {
+    // eslint-disable-next-line no-console
+    console.log(JSON.stringify(payload))
+  }
 }
 
 export const logger = {
