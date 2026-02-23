@@ -113,6 +113,9 @@ const summarizeLogMeta = (metaJson: string | null): string => {
     pushIfNumber("newEvents")
     pushIfNumber("dispatched")
     pushIfNumber("dueFeeds")
+    if (meta.bootstrapUsed === true) {
+      parts.push("bootstrapUsed=true")
+    }
     if (typeof meta.cooldownUntil === "string") {
       parts.push(`cooldownUntil=${formatUtcToJakarta(meta.cooldownUntil)}`)
     }
