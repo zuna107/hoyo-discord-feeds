@@ -23,5 +23,16 @@ module.exports = {
       instances: 1,
       autorestart: true,
     },
+    {
+      name: "feed-engine-dashboard",
+      script: "npm",
+      args: "--prefix dashboard run preview -- --host 0.0.0.0 --port 3000",
+      env: {
+        NODE_ENV: "production",
+      },
+      max_memory_restart: "200M",
+      instances: 1,
+      autorestart: true,
+    },
   ],
 };
