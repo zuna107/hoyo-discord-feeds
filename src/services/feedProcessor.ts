@@ -11,6 +11,13 @@ const defaultCooldownMs = 15 * 60 * 1000
 const sortPosts = (posts: NormalizedPost[]): NormalizedPost[] =>
   [...posts].sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime())
 
+const latestPost = (posts: NormalizedPost[]): NormalizedPost | null => {
+  if (posts.length === 0) {
+    return null
+  }
+  return sortPosts(posts)[posts.length - 1] ?? null
+}
+
 const shouldUseFallback = (feed: Feed): boolean => feed.fallbackEnabled
 
 const isFreshByAgePolicy = (post: NormalizedPost): boolean => {
@@ -32,9 +39,17 @@ export class FeedProcessor {
     try {
       const posts = await adapter.fetchLatest(feed)
       const freshPosts = posts.filter(isFreshByAgePolicy)
-      const sorted = sortPosts(freshPosts)
+      let candidates = sortPosts(freshPosts)
+      let bootstrapUsed = false
+      if (candidates.length === 0 && posts.length > 0 && eventRepo.countByFeed(feed.id) === 0) {
+        const bootstrap = latestPost(posts)
+        if (bootstrap) {
+          candidates = [bootstrap]
+          bootstrapUsed = true
+        }
+      }
       let insertedEvents = 0
-      for (const post of sorted) {
+      for (const post of candidates) {
         const eventId = eventRepo.insertIfNew({
           feedId: feed.id,
           source: post.source,
@@ -61,6 +76,7 @@ export class FeedProcessor {
         fetched: posts.length,
         droppedByAgePolicy: posts.length - freshPosts.length,
         newEvents: insertedEvents,
+        bootstrapUsed,
       })
     } catch (error) {
       if (error instanceof UpstreamRateLimitError) {
