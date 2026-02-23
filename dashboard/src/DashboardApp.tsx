@@ -17,7 +17,7 @@ type FeedForm = {
   identifier: string
   displayName: string
   language: HoyoLabLanguage
-  pollingIntervalSec: number
+  pollingIntervalSec: string
 }
 
 type WebhookForm = {
@@ -37,7 +37,7 @@ const defaultFeedForm: FeedForm = {
   identifier: "",
   displayName: "",
   language: "en-us",
-  pollingIntervalSec: 180,
+  pollingIntervalSec: "180",
 }
 
 const defaultWebhookForm: WebhookForm = {
@@ -92,6 +92,14 @@ const formatEpochMsToJakarta = (value: number | null | undefined): string => {
     second: "2-digit",
     hour12: false,
   }).format(date)
+}
+
+const maskWebhookUrl = (url: string): string => {
+  const match = url.match(/^(https?:\/\/[^/]+\/api\/webhooks\/\d+)/i)
+  if (!match?.[1]) {
+    return url
+  }
+  return `${match[1]}`
 }
 
 const summarizeLogMeta = (metaJson: string | null): string => {
@@ -190,7 +198,15 @@ export const DashboardApp = ({ onLogout }: DashboardAppProps) => {
 
   const onCreateFeed = async (event: FormEvent) => {
     event.preventDefault()
-    await api.createFeed(feedForm)
+    const interval = Number(feedForm.pollingIntervalSec)
+    if (!Number.isFinite(interval) || interval <= 0) {
+      setError("Poll interval must be greater than 0.")
+      return
+    }
+    await api.createFeed({
+      ...feedForm,
+      pollingIntervalSec: interval,
+    })
     setFeedForm(defaultFeedForm)
     await refresh()
   }
@@ -216,7 +232,7 @@ export const DashboardApp = ({ onLogout }: DashboardAppProps) => {
       webhookId: Number(subscriptionForm.webhookId),
       categoryTag: subscriptionForm.categoryTag || null,
     })
-    setSubscriptionForm((prev) => ({ ...defaultSubscriptionForm, feedId: prev.feedId, webhookId: prev.webhookId }))
+    setSubscriptionForm(defaultSubscriptionForm)
     await refresh()
   }
 
@@ -274,9 +290,9 @@ export const DashboardApp = ({ onLogout }: DashboardAppProps) => {
                 setFeedForm((prev) => ({ ...prev, platform: event.target.value as Platform }))
               }
             >
-              <option value="twitter">twitter</option>
-              <option value="youtube">youtube</option>
-              <option value="hoyolab">hoyolab</option>
+              <option value="twitter">Twitter</option>
+              <option value="youtube">YouTube</option>
+              <option value="hoyolab">HoYoLAB</option>
             </select>
           </label>
           <label>
@@ -316,10 +332,10 @@ export const DashboardApp = ({ onLogout }: DashboardAppProps) => {
             Poll Interval (sec)
             <input
               type="number"
-              min={30}
+              min={1}
               value={feedForm.pollingIntervalSec}
               onChange={(event) =>
-                setFeedForm((prev) => ({ ...prev, pollingIntervalSec: Number(event.target.value) }))
+                setFeedForm((prev) => ({ ...prev, pollingIntervalSec: event.target.value }))
               }
               required
             />
@@ -417,96 +433,102 @@ export const DashboardApp = ({ onLogout }: DashboardAppProps) => {
       <section className="card">
         <h2>Feeds</h2>
         <p className="time-note">Timezone: Asia/SEA (UTC+7)</p>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Platform</th>
-              <th>Identifier</th>
-              <th>Name</th>
-              <th>Language</th>
-              <th>Interval</th>
-              <th>Active</th>
-              <th>Last Polled</th>
-              <th>Cooldown</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {feeds.map((feed) => (
-              <tr key={feed.id}>
-                <td>{feed.id}</td>
-                <td>{feed.platform}</td>
-                <td>{feed.identifier}</td>
-                <td>{feed.displayName}</td>
-                <td>{feed.language}</td>
-                <td>{feed.pollingIntervalSec}</td>
-                <td>{String(feed.active)}</td>
-                <td>{formatUtcToJakarta(feed.lastPolledAt)}</td>
-                <td>{formatUtcToJakarta(feed.cooldownUntil)}</td>
-                <td>
-                  <button onClick={() => void api.deleteFeed(feed.id).then(refresh)}>Delete</button>
-                </td>
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Platform</th>
+                <th>Identifier</th>
+                <th>Name</th>
+                <th>Language</th>
+                <th>Interval</th>
+                <th>Active</th>
+                <th>Last Polled</th>
+                <th>Cooldown</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {feeds.map((feed) => (
+                <tr key={feed.id}>
+                  <td>{feed.id}</td>
+                  <td>{feed.platform}</td>
+                  <td>{feed.identifier}</td>
+                  <td>{feed.displayName}</td>
+                  <td>{feed.language}</td>
+                  <td>{feed.pollingIntervalSec}</td>
+                  <td>{String(feed.active)}</td>
+                  <td>{formatUtcToJakarta(feed.lastPolledAt)}</td>
+                  <td>{formatUtcToJakarta(feed.cooldownUntil)}</td>
+                  <td>
+                    <button onClick={() => void api.deleteFeed(feed.id).then(refresh)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="card">
         <h2>Webhooks</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Server</th>
-              <th>URL</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {webhooks.map((webhook) => (
-              <tr key={webhook.id}>
-                <td>{webhook.id}</td>
-                <td>{webhook.name}</td>
-                <td>{webhook.serverName ?? "-"}</td>
-                <td className="truncate">{webhook.url}</td>
-                <td>
-                  <button onClick={() => void api.deleteWebhook(webhook.id).then(refresh)}>Delete</button>
-                </td>
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Server</th>
+                <th>URL</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {webhooks.map((webhook) => (
+                <tr key={webhook.id}>
+                  <td>{webhook.id}</td>
+                  <td>{webhook.name}</td>
+                  <td>{webhook.serverName ?? "-"}</td>
+                  <td className="truncate">{maskWebhookUrl(webhook.url)}</td>
+                  <td>
+                    <button onClick={() => void api.deleteWebhook(webhook.id).then(refresh)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="card">
         <h2>Subscriptions</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Feed</th>
-              <th>Webhook</th>
-              <th>Category</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {subscriptions.map((sub) => (
-              <tr key={sub.id}>
-                <td>{sub.id}</td>
-                <td>{feedNameById.get(sub.feedId) ?? sub.feedId}</td>
-                <td>{webhookNameById.get(sub.webhookId) ?? sub.webhookId}</td>
-                <td>{sub.categoryTag ?? "-"}</td>
-                <td>
-                  <button onClick={() => void api.deleteSubscription(sub.id).then(refresh)}>Delete</button>
-                </td>
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Feed</th>
+                <th>Webhook</th>
+                <th>Category</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {subscriptions.map((sub) => (
+                <tr key={sub.id}>
+                  <td>{sub.id}</td>
+                  <td>{feedNameById.get(sub.feedId) ?? sub.feedId}</td>
+                  <td>{webhookNameById.get(sub.webhookId) ?? sub.webhookId}</td>
+                  <td>{sub.categoryTag ?? "-"}</td>
+                  <td>
+                    <button onClick={() => void api.deleteSubscription(sub.id).then(refresh)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="card split">
