@@ -94,6 +94,34 @@ const formatEpochMsToJakarta = (value: number | null | undefined): string => {
   }).format(date)
 }
 
+const summarizeLogMeta = (metaJson: string | null): string => {
+  if (!metaJson) {
+    return ""
+  }
+  try {
+    const meta = JSON.parse(metaJson) as Record<string, unknown>
+    const parts: string[] = []
+    const pushIfNumber = (key: string) => {
+      const value = meta[key]
+      if (typeof value === "number") {
+        parts.push(`${key}=${value}`)
+      }
+    }
+    pushIfNumber("feedId")
+    pushIfNumber("fetched")
+    pushIfNumber("droppedByAgePolicy")
+    pushIfNumber("newEvents")
+    pushIfNumber("dispatched")
+    pushIfNumber("dueFeeds")
+    if (typeof meta.cooldownUntil === "string") {
+      parts.push(`cooldownUntil=${formatUtcToJakarta(meta.cooldownUntil)}`)
+    }
+    return parts.join(" | ")
+  } catch {
+    return ""
+  }
+}
+
 type DashboardAppProps = {
   onLogout?: () => void
 }
@@ -399,6 +427,7 @@ export const DashboardApp = ({ onLogout }: DashboardAppProps) => {
               <th>Language</th>
               <th>Interval</th>
               <th>Active</th>
+              <th>Last Polled</th>
               <th>Cooldown</th>
               <th></th>
             </tr>
@@ -413,6 +442,7 @@ export const DashboardApp = ({ onLogout }: DashboardAppProps) => {
                 <td>{feed.language}</td>
                 <td>{feed.pollingIntervalSec}</td>
                 <td>{String(feed.active)}</td>
+                <td>{formatUtcToJakarta(feed.lastPolledAt)}</td>
                 <td>{formatUtcToJakarta(feed.cooldownUntil)}</td>
                 <td>
                   <button onClick={() => void api.deleteFeed(feed.id).then(refresh)}>Delete</button>
@@ -526,6 +556,7 @@ export const DashboardApp = ({ onLogout }: DashboardAppProps) => {
                 <th>Level</th>
                 <th>Component</th>
                 <th>Message</th>
+                <th>Meta</th>
               </tr>
             </thead>
             <tbody>
@@ -543,6 +574,7 @@ export const DashboardApp = ({ onLogout }: DashboardAppProps) => {
                     )}
                   </td>
                   <td>{row.message}</td>
+                  <td className="truncate">{summarizeLogMeta(row.meta_json) || "-"}</td>
                 </tr>
               ))}
             </tbody>
