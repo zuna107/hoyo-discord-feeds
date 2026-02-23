@@ -203,6 +203,13 @@ th {
   border-radius: 8px;
 }
 
+.table-scroll {
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid #edf2fb;
+  border-radius: 8px;
+}
+
 .badge {
   border-radius: 999px;
   padding: 2px 8px;

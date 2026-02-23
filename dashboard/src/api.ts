@@ -44,6 +44,20 @@ const req = async <T>(path: string, init?: RequestInit): Promise<T> => {
     if (body.includes("Cannot GET") || body.startsWith("<!DOCTYPE html")) {
       throw new Error(`API endpoint not found at ${API_BASE}${path}. Check backend URL/version.`)
     }
+    let parsedMessage: string | null = null
+    try {
+      const parsed = JSON.parse(body) as { message?: unknown; error?: unknown }
+      if (typeof parsed.message === "string" && parsed.message.trim().length > 0) {
+        parsedMessage = parsed.message
+      } else if (typeof parsed.error === "string" && parsed.error.trim().length > 0) {
+        parsedMessage = parsed.error
+      }
+    } catch {
+      // Fallback to raw body if response is not JSON.
+    }
+    if (parsedMessage) {
+      throw new Error(parsedMessage)
+    }
     throw new Error(body || `HTTP ${res.status}`)
   }
   if (res.status === 204) {

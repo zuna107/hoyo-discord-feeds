@@ -75,6 +75,7 @@ export const App = () => {
       setCode("")
       setMode("ready")
     } catch (err) {
+      setCode("")
       setCodeError(err instanceof Error ? err.message : "Failed to verify setup")
     } finally {
       setBusy(false)
@@ -95,7 +96,8 @@ export const App = () => {
       setCode("")
       setMode("ready")
     } catch (err) {
-      setCodeError(err instanceof Error ? err.message : "Invalid authenticator code")
+      setCode("")
+      setCodeError(err instanceof Error ? err.message : "Invalid authenticator code.")
     } finally {
       setBusy(false)
     }
