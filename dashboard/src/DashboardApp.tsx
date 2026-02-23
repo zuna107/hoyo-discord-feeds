@@ -416,7 +416,7 @@ export const DashboardApp = ({ onLogout }: DashboardAppProps) => {
 
       <section className="card">
         <h2>Feeds</h2>
-        <p className="time-note">Timezone: Asia/Jakarta (UTC+7)</p>
+        <p className="time-note">Timezone: Asia/SEA (UTC+7)</p>
         <table>
           <thead>
             <tr>
