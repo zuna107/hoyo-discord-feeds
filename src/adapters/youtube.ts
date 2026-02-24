@@ -119,8 +119,12 @@ export class YouTubeAdapter implements SourceAdapter {
       rssError = error instanceof Error ? error : new Error("Unknown YouTube RSS error")
     }
 
+    if (!env.YOUTUBE_API_FALLBACK_ENABLED) {
+      throw new UpstreamTemporaryError(`YouTube RSS temporary error: ${rssError.message} (API fallback disabled)`)
+    }
+
     if (!env.YOUTUBE_API_KEY) {
-      throw new UpstreamTemporaryError(`YouTube RSS temporary error: ${rssError.message}`)
+      throw new UpstreamTemporaryError(`YouTube RSS temporary error: ${rssError.message} (missing YOUTUBE_API_KEY)`)
     }
 
     return this.fetchLatestFromDataApi(feed, rssError.message)

@@ -32,6 +32,10 @@ const envSchema = z.object({
   RETRY_BASE_MS: z.coerce.number().int().positive().default(5000),
   TWITTER_BEARER_TOKEN: z.string().optional(),
   YOUTUBE_API_KEY: z.string().optional(),
+  YOUTUBE_API_FALLBACK_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   HOYOLAB_ENDPOINT: z.string().optional(),
   HOYOLAB_LANGUAGE: z.enum(HOYOLAB_LANGUAGES).default("en-us"),
   HOYOLAB_APP_VERSION: z.string().default("3.9.0"),
